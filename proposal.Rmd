@@ -1,14 +1,23 @@
 ---
 title: "Project proposal"
-author: "Team Name: Team member 1, Team member 2, Team member 3, Team member 4"
-date: "Update date"
+author: "Team Name: Rhea Tejwani, Sue Zhang, Keena Gao"
+date: "10/6/2020"
 output: pdf_document
 ---
+
 
 ### Section 1. Introduction
 
 ### Section 2. Data description
 
 ### Section 3. Glimpse of data 
+```{r load-data, message=FALSE}
+library(tidyverse) 
+spotify_data <- read_csv("data/top10s (2).csv")
+```
+
+```{r glimpse-data}
+glimpse(spotify_data)
+```
 
 
