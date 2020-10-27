@@ -7,7 +7,7 @@ output: pdf_document
 
 
 ### Section 1. Introduction
-The dataset contains statistics of the most popular music in the world over the years on the streaming service Spotify. Music is constantly changing, and as students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us. Our research question is "how have characteristics of the most listened to music changed over time?" Our hypotheses are that popular music has shifted to be more diverse in these categories like acoustics, BPM, valence, etc. 
+The dataset contains statistics of the most popular music in the world over the years on the streaming service Spotify. Music is constantly changing, and as students who frequently listen to music and pay for a streaming subscription, we want to analyze the trends of popular music in our generation and the generations before us. Our research question is "how have characteristics of the most listened to music changed over time?" Our hypotheses are that popular music has shifted to be more diverse in these categories like acoustics, BPM, valence, etc. In the past, most songs were similar in speed and genre, however we hypothesize that popular music today has more variance and the range of values in each category is broader.
 
 ### Section 2. Data description
 This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
