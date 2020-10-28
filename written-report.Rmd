@@ -13,32 +13,91 @@ knitr::opts_chunk$set(echo = FALSE,
 
 Your written report goes here! Before you submit, make sure your code chunks are turned off with `echo = FALSE` and there are no warnings or messages with `warning = FALSE` and `message = FALSE` 
 
-#Introduction
-  The dataset contains statistics of the most popular music in the world over the years on the streaming service Spotify. Music is constantly changing, and as students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us. Our research question is “how have characteristics of the most listened to music changed over time?” Our hypotheses are that popular music has shifted to be more diverse in these categories like acoustics, BPM, valence, etc.
-  This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. Title: title of the song Artist: the musician/group who performed the song Top genre: genre of the track year: year it was released Beats per minute(bpm): tempo of the song Energy: how energetic the song is Danceability: how easy the song is to dance to Loudness(dB): how loud the song is Liveness: the likeliness of the song being a live recording Valence: how positive a song is Length(duration): the length of a track Acousticness: how acoustic a song is Speechiness: how much spoken word is in the song Popularity: how popular a song is The original data set was taken from the playlist on spotify Top 2000s on PlaylistMachinery(@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/.
+### Introduction and Data
 
-# Methodology
+  The data set contains statistics of the most popular music in the world over the years on the streaming service Spotify. Music is constantly changing, and as students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us. Our research question is “how have characteristics of the most listened to music changed over time?” Our hypotheses are that popular music has shifted to be more diverse in these categories like acoustics, BPM, valence, etc., and that these variables all affect each other (ex. the BPM of a song will affect its energy).
+  
+  This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
+  
+Variables:
 
-  We will look at the correlation, variance and IQR of the variables for beats per minute, energy, valence, acousticness and speechiness. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests.
+Title: title of the song 
+
+Artist: the musician/group who performed the song 
+
+Top genre: genre of the track year: year it was released 
+
+Beats per minute (BPM): tempo of the song 
+
+Energy: how energetic the song is 
+
+Danceability: how easy the song is to dance to 
+
+Loudness (dB): how loud the song is 
+
+Liveness: the likeliness of the song being a live recording 
+
+Valence: how positive a song is 
+
+Length (duration): the length of a track 
+
+Acousticness: how acoustic a song is 
+
+Speechiness: how much spoken word is in the song 
+
+Popularity: how popular a song is 
+
+The original data set was taken from the playlist on spotify Top 2000s on PlaylistMachinery(@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/.
+
+### Methodology
+
+  We will look at the correlation, variance, standard deviations, and IQR of the variables for BPM, energy, valence, acousticness and speechiness. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests.
 
   
-# Data Analysis
+### Data
+
 ```{r load-packages-and-data}
 library(tidyverse)
 library(infer)
+library(broom)
 spotify_data <- read_csv("data/Spotify-2000.csv")
 ```
 
 ```{r decade-variable}
 spotify_data <- spotify_data %>%
   mutate(decade = case_when(Year <= 1959 ~ " 50s",
-                            Year >=1960 & Year <=1969 ~ " 60s",
-                            Year >=1970 & Year <=1979 ~ " 70s",
-                            Year >=1980 & Year <=1989 ~ " 80s",
-                            Year >=1990 & Year <=1999 ~ " 90s",
-                            Year >=2000 & Year <=2009 ~ "2000s",
-                            Year >=2010 & Year <= 2020 ~ "2010s",))
+                            Year >= 1960 & Year <= 1969 ~ " 60s",
+                            Year >= 1970 & Year <= 1979 ~ " 70s",
+                            Year >= 1980 & Year <= 1989 ~ " 80s",
+                            Year >= 1990 & Year <= 1999 ~ " 90s",
+                            Year >= 2000 & Year <= 2009 ~ "2000s",
+                            Year >= 2010 & Year <= 2020 ~ "2010s",))
 ```
+
+```{r past-present-variable}
+spotify_data <- spotify_data %>%
+  mutate(period = case_when(Year <= 1959 ~ "Oldies",
+                            Year >= 1960 & Year <= 1969 ~ "Oldies",
+                            Year >= 1970 & Year <= 1979 ~ "Oldies",
+                            Year >= 1980 & Year <= 1989 ~ "Oldies",
+                            Year >= 1990 & Year <= 1999 ~ "Present",
+                            Year >= 2000 & Year <= 2009 ~ "Present",
+                            Year >= 2010 & Year <= 2021 ~ "Present",))
+```
+
+```{r oldies-variance}
+spotify_data %>%
+  filter(period == "Oldies") %>%
+  summarise(variance = var(Acousticness))
+```
+
+```{r present-variance}
+spotify_data %>%
+  filter(period == "Present") %>%
+  summarise(variance = var(Acousticness))
+```
+
+### Data Inference
 
 Top Genres of songs across decades:
 
@@ -48,58 +107,81 @@ spotify_data %>%
   count(`Top Genre`) %>%
   arrange(desc(n)) 
 ```
+
 The most popular genre across these top 2000 songs by decade is album rock in the 70s. Album rock is also especially popular in the 80s and 60s. 
 
-# Data Inference
-
 ```{r bpm-boxplot}
-  ggplot(data=spotify_data, mapping=aes(x=decade, y=`Beats Per Minute (BPM)`, fill=decade)) +
+ggplot(data = spotify_data, mapping = aes(x = decade, y = `Beats Per Minute (BPM)`, fill = decade)) +
          geom_boxplot() +
-  labs(title="BPM vs. Decade")
+  labs(title = "BPM vs. Decade")
 ```
 
 ```{r valence-boxplot}
-  ggplot(data=spotify_data, mapping=aes(x=decade, y=Valence, fill=decade)) +
+  ggplot(data = spotify_data, mapping = aes(x = decade, y = Valence, fill = decade)) +
          geom_boxplot() +
-  labs(title="Valence vs. Decade")
+  labs(title = "Valence vs. Decade")
 ```
 
 ```{r speechiness-boxplot}
-  ggplot(data=spotify_data, mapping=aes(x=decade, y=Speechiness, fill=decade)) +
+  ggplot(data = spotify_data, mapping = aes(x = decade, y = Speechiness, fill = decade)) +
          geom_boxplot() +
-  labs(title="Speechiness vs. Decade")
+  labs(title = "Speechiness vs. Decade")
+```
+Since we are interested in discovering whether the level of acousticness has changed over time, these are our hypotheses:
+
+H0: The true mean acousticness of hit music in the 90s, 2000s, and 2010s is equal to the true mean acousticness of hit music in the 50s, 60s, 70s, and 80s. 
+
+Ha: The true mean acousticness of hit music in the 90s, 2000s, and 2010s is less than the true mean acousticness of hit music in the 50s, 60s, 70s, and 80s. 
+
+Significance level: alpha = 0.05
+
+```{r std-dev-null}
+set.seed(10)  
+null_dist_acousticness <- spotify_data %>% 
+  specify(Acousticness ~ period) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("Present", "Oldies"))
+
+obs_diff_acousticness <- spotify_data %>% 
+  specify(Acousticness ~ period) %>%
+  calculate(stat = "diff in means", order = c("Present", "Oldies"))
+obs_diff_acousticness
+
+null_dist_acousticness %>%
+  get_p_value(obs_stat = obs_diff_acousticness, direction = "less")
 ```
 
-```{r past-present-variable}
-spotify_data <- spotify_data %>%
-  mutate(period = case_when(Year <= 1959 ~ "Oldies",
-                            Year >=1960 & Year <=1969 ~ "Oldies",
-                            Year >=1970 & Year <=1979 ~ "Oldies",
-                            Year >=1980 & Year <=1989 ~ "Oldies",
-                            Year >=1990 & Year <=1999 ~ "Present",
-                            Year >=2000 & Year <=2009 ~ "Present",
-                            Year >=2010 & Year <= 2021 ~ "Present",))
+Our p-value is very little and smaller than our significance level of 0.05, so we will reject the null. We have sufficient evidence that the true mean acousticness of hit music in the 90s, 2000s, and 2010s is less than the true mean acousticness of hit music in the 50s, 60s, 70s, and 80s. 
+
+# we are confused as to how to use simulation with our dataset, so we would appreciate help/advice on how to do this please! :)
+
+Linear Regression of Energy vs. Acousticness:
+
+```{r lm-energy-decade}
+m_e_yr <- lm(Energy ~ Acousticness, data = spotify_data)
+m_e_yr %>%
+  tidy() %>%
+  select(term, estimate)
+```
+For each increase in one unit of Acousticness, the Energy is predicted to decrease by -0.508. 
+If there is no units of Acousticness, the Energy is predicted to be 74.34. 
+
+```{r}
+ggplot(data = spotify_data,
+       mapping = aes(y = Energy, x = Acousticness, color = period)) +
+  geom_point(alpha = 0.5) + 
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Acousticness", y = "Energy", color = "period")
 ```
 
-```{r oldies-variance}
-spotify_data %>%
-  filter(period=="Oldies") %>%
-  summarise(variance = var(Acousticness))
-```
 
-```{r present-variance}
-spotify_data %>%
-  filter(period=="Present") %>%
-  summarise(variance = var(Acousticness))
-```
+### Discussion
 
-
-#we are confused as to how to use simulation with our dataset, so we would appreciate help/advice on how to do this please! :)
-
-# Conclusions
-
-BPM appears to not have many discrepancies by decade. Valence appears to have decreased throughout time. The spread of speechiness appears to be increasing over time, as well as the number of outliers. 
+BPM appears to not have many discrepancies by decade. Valence appears to have decreased throughout time. The spread of speechiness appears to be increasing over time including the number of outliers, which indicates a more widespread acceptance of typically "speechy" genres in popular music, like hip hop. 
 
 Our summary statistics for variance show that the variance of acousticness is larger in the present era of music than it is in the past era of music. 
 
-No variables that we tested for in hit music have become less diverse over time, but only a few became more varied. These were acousticness, as demonstrated by our summary statistics for variance, and speechiness, as demonstrated by an increased spread over time by our box plots. 
+No variables that we tested for in hit music have become less diverse over time, but only a few became more varied. These were acousticness, as demonstrated by our summary statistics for variance and our conclusion from our hypothesis test, and speechiness, as demonstrated by an increased spread over time by our box plots. 
+
+(Add paragraph about what we would do differently in the final draft)
