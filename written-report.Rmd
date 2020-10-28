@@ -20,8 +20,9 @@ Your written report goes here! Before you submit, make sure your code chunks are
 # Methodology
 
   We will look at the correlation, variance and IQR of the variables for beats per minute, energy, valence, acousticness and speechiness. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests.
+
   
-#Data
+# Data Analysis
 ```{r load-packages-and-data}
 library(tidyverse)
 library(infer)
@@ -36,8 +37,20 @@ spotify_data <- spotify_data %>%
                             Year >=1980 & Year <=1989 ~ " 80s",
                             Year >=1990 & Year <=1999 ~ " 90s",
                             Year >=2000 & Year <=2009 ~ "2000s",
-                            Year >=2010 & Year <= 2021 ~ "2010s",))
+                            Year >=2010 & Year <= 2020 ~ "2010s",))
 ```
+
+Top Genres of songs across decades:
+
+```{r group-by-decade}
+spotify_data %>%
+  group_by(decade) %>%
+  count(`Top Genre`) %>%
+  arrange(desc(n)) 
+```
+The most popular genre across these top 2000 songs by decade is album rock in the 70s. Album rock is also especially popular in the 80s and 60s. 
+
+# Data Inference
 
 ```{r bpm-boxplot}
   ggplot(data=spotify_data, mapping=aes(x=decade, y=`Beats Per Minute (BPM)`, fill=decade)) +
@@ -82,3 +95,11 @@ spotify_data %>%
 
 
 #we are confused as to how to use simulation with our dataset, so we would appreciate help/advice on how to do this please! :)
+
+# Conclusions
+
+BPM appears to not have many discrepancies by decade. Valence appears to have decreased throughout time. The spread of speechiness appears to be increasing over time, as well as the number of outliers. 
+
+Our summary statistics for variance show that the variance of acousticness is larger in the present era of music than it is in the past era of music. 
+
+No variables that we tested for in hit music have become less diverse over time, but only a few became more varied. These were acousticness, as demonstrated by our summary statistics for variance, and speechiness, as demonstrated by an increased spread over time by our box plots. 
