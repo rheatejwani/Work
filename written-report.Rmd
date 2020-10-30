@@ -15,11 +15,18 @@ Your written report goes here! Before you submit, make sure your code chunks are
 
 ### Introduction and Data
 
-  The data set contains statistics of the most popular music in the world over the years on the streaming service Spotify. Music is constantly changing, and as students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us. Our research question is “how have characteristics of the most listened to music changed over time?” Our hypotheses are that popular music has shifted to be more diverse in these categories like acoustics, BPM, valence, etc., and that these variables all affect each other (ex. the BPM of a song will affect its energy).
+Music is one of the most accessible ways to experience and communicate emotional experiences and opinions across cultural norms and language barriers. Popular music is especially able to broadcast its message, but popularity depends on the breadth of people that enjoy listening to it. 
+
+Trends in popular music are constantly changing, and these changes will affect globalization and cultural communication. For instance, hip-hop music, an aspect of the hip-hop cultural movement, was stated to be the most popular genre of music in the U.S. in 2017 in this Rolling Stone article: https://www.rollingstone.com/music/music-news/hip-hop-continued-to-dominate-the-music-business-in-2018-774422/. As students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us.
+
+The data that we chose to analyze was curated by Sumat Singh (@iamsumat) on Kaggle, and contains variables that measure various characteristics of the most popular music in the world over the years 1956 to 2019 on the streaming service Spotify. https://www.kaggle.com/iamsumat/spotify-top-2000s-mega-dataset
+The original data set was taken from the playlist on Spotify "Top 2000s" by the user PlaylistMachinery (@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/.
+
+Our research question: How have the characteristics (Top Genre, Beats per Minute (BPM), Acousticness, Speechiness) of the most listened to music changed over time? If a characteristic does change over time, will these changes affect other associated characteristics? Thus, our hypotheses are popular music has shifted to be more diverse in these characteristics, and many of these variables will affect each other, like Acousticness and Energy.
   
-  This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
+This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
   
-Variables:
+Relevant Variables:
 
 Title: title of the song 
 
@@ -47,14 +54,9 @@ Speechiness: how much spoken word is in the song
 
 Popularity: how popular a song is 
 
-The original data set was taken from the playlist on spotify Top 2000s on PlaylistMachinery(@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/.
-
-### Methodology
+### Exploratory Data Analysis
 
   We will look at the correlation, variance, standard deviations, and IQR of the variables for BPM, energy, valence, acousticness and speechiness. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests.
-
-  
-### Data
 
 ```{r load-packages-and-data}
 library(tidyverse)
@@ -65,24 +67,24 @@ spotify_data <- read_csv("data/Spotify-2000.csv")
 
 ```{r decade-variable}
 spotify_data <- spotify_data %>%
-  mutate(decade = case_when(Year <= 1959 ~ " 50s",
+  mutate(decade = case_when(Year >= 1956 & Year <= 1959 ~ " 50s",
                             Year >= 1960 & Year <= 1969 ~ " 60s",
                             Year >= 1970 & Year <= 1979 ~ " 70s",
                             Year >= 1980 & Year <= 1989 ~ " 80s",
                             Year >= 1990 & Year <= 1999 ~ " 90s",
                             Year >= 2000 & Year <= 2009 ~ "2000s",
-                            Year >= 2010 & Year <= 2020 ~ "2010s",))
+                            Year >= 2010 & Year <= 2019 ~ "2010s",))
 ```
 
 ```{r past-present-variable}
 spotify_data <- spotify_data %>%
-  mutate(period = case_when(Year <= 1959 ~ "Oldies",
+  mutate(period = case_when(Year >= 1956 & Year <= 1959 ~ "Oldies",
                             Year >= 1960 & Year <= 1969 ~ "Oldies",
                             Year >= 1970 & Year <= 1979 ~ "Oldies",
                             Year >= 1980 & Year <= 1989 ~ "Oldies",
                             Year >= 1990 & Year <= 1999 ~ "Present",
                             Year >= 2000 & Year <= 2009 ~ "Present",
-                            Year >= 2010 & Year <= 2021 ~ "Present",))
+                            Year >= 2010 & Year <= 2019 ~ "Present",))
 ```
 
 ```{r oldies-variance}
@@ -97,7 +99,7 @@ spotify_data %>%
   summarise(variance = var(Acousticness))
 ```
 
-### Data Inference
+### Methodology
 
 Top Genres of songs across decades:
 
