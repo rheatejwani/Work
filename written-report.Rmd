@@ -19,10 +19,11 @@ Music is one of the most accessible ways to experience and communicate emotional
 
 Trends in popular music are constantly changing, and these changes will affect globalization and cultural communication. For instance, hip-hop music, an aspect of the hip-hop cultural movement, was stated to be the most popular genre of music in the U.S. in 2017 in this Rolling Stone article: https://www.rollingstone.com/music/music-news/hip-hop-continued-to-dominate-the-music-business-in-2018-774422/. As students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us.
 
-The data that we chose to analyze was curated by Sumat Singh (@iamsumat) on Kaggle, and contains variables that measure various characteristics of the most popular music in the world over the years 1956 to 2019 on the streaming service Spotify. https://www.kaggle.com/iamsumat/spotify-top-2000s-mega-dataset
-The original data set was taken from the playlist on Spotify "Top 2000s" by the user PlaylistMachinery (@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/.
+The data that we chose to analyze was curated by Sumat Singh (@iamsumat) on Kaggle, and contains variables that measure various characteristics of the most popular music in the world over the years 1956 to 2019 on the streaming service Spotify. https://www.kaggle.com/iamsumat/spotify-top-2000s-mega-dataset 
 
-Our research question: How have the characteristics (Top Genre, Beats per Minute (BPM), Acousticness, Speechiness) of the most listened to music changed over time? If a characteristic does change over time, will these changes affect other associated characteristics? Thus, our hypotheses are popular music has shifted to be more diverse in these characteristics, and many of these variables will affect each other, like Acousticness and Energy.
+The original data set was taken from the playlist on Spotify "Top 2000s" by the user PlaylistMachinery (@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/. This data was uploaded 9 months ago.
+
+Our research question: Has popular music shifted to be more diverse in characteristics such as Top Genre, Beats per Minute (BPM), Acousticness, Speechiness? The goal of our report is to observe how these characteristics changed over time and how these variables may affect one another.
   
 This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
   
@@ -56,7 +57,13 @@ Popularity: how popular a song is
 
 ### Exploratory Data Analysis
 
-  We will look at the correlation, variance, standard deviations, and IQR of the variables for BPM, energy, valence, acousticness and speechiness. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests.
+There are no missing data values so we don't have to clean the data. We will create new variables using the mutate and case_when functions as follows:
+decade: the decade as named by "50s", "60s", etc
+period: "oldies" for before 1990 and "present" for after 1989
+foreign_lang: categorical variable("Yes" for any song whose genre has a foreign country/language in it)
+broad genre: broad category "pop" or "rock" or etc
+
+We will use dplyr functions to explore our data set in terms of summarising the variance and counting different variables and visualizing them. We are looking for unusual patterns or clusters of observations whose relationships we can further explore through hypothesis testing. 
 
 ```{r load-packages-and-data}
 library(tidyverse)
@@ -76,6 +83,19 @@ spotify_data <- spotify_data %>%
                             Year >= 2010 & Year <= 2019 ~ "2010s",))
 ```
 
+```{r foreign_languages_variable}
+spotify_data <- spotify_data %>%
+  mutate(foreign_lang = case_when(
+    `Top Genre` == "dutch indie" | `Top Genre` == "dutch cabaret" 
+    | `Top Genre` == "dutch pop" |`Top Genre` == "dutch americana" |
+      `Top Genre` == "german pop"|`Top Genre` == "dutch rock" |
+      `Top Genre` == "belgian rock" | `Top Genre` == "finnish metal"|
+      `Top Genre` == "german pop rock" | `Top Genre` == "german alternative rock" |`Top Genre` == "italian pop" | `Top Genre` == "latin" |
+      `Top Genre` == "latin alternative"| `Top Genre` == "latin jazz" ~ "Yes"
+  ))
+#HOW TO DO ELSE FOR CASE_WHEN ~ "no"
+```
+
 ```{r past-present-variable}
 spotify_data <- spotify_data %>%
   mutate(period = case_when(Year >= 1956 & Year <= 1959 ~ "Oldies",
@@ -86,6 +106,34 @@ spotify_data <- spotify_data %>%
                             Year >= 2000 & Year <= 2009 ~ "Present",
                             Year >= 2010 & Year <= 2019 ~ "Present",))
 ```
+
+```{r clustered-genre-variable}
+spotify_data <- spotify_data %>%
+  mutate(broad_genre = case_when(
+    `Top Genre` == "album rock"|`Top Genre` == "dutch rock" |
+      `Top Genre` == "belgian rock" |  `Top Genre` == "german pop rock"
+    | `Top Genre` == "german alternative rock"|  `Top Genre` == "classic rock"|
+    `Top Genre` == "alternative pop rock"| `Top Genre` == "modern rock"|
+      `Top Genre` == "alternative rock"| `Top Genre` == "garage rock"|
+      `Top Genre` == "modern folk rock"| `Top Genre` == "irish rock"|
+      `Top Genre` == "art rock"| `Top Genre` == "danish pop rock"|
+      `Top Genre` == "celtic rock"| `Top Genre` == "blues rock"|
+      `Top Genre` == "soft rock"| `Top Genre` == "glam rock" ~ "rock",
+    `Top Genre` == "acoustic pop"|`Top Genre` == "dutch pop" |
+      `Top Genre` == "barbadian pop" |  `Top Genre` == "folk-pop" 
+    | `Top Genre` == "electropop"| `Top Genre` == "belgian pop"|
+    `Top Genre` == "pop"| `Top Genre` == "chamber pop"|
+      `Top Genre` == "irish pop"| `Top Genre` == "indie pop"|
+      `Top Genre` == "canadian pop"| `Top Genre` == "danish pop"|
+      `Top Genre` == "art pop"| `Top Genre` == "dance pop"|
+      `Top Genre` == "italian pop"| `Top Genre` == "la pop"|
+      `Top Genre` == "german pop"| `Top Genre` == "baroque pop"|
+      `Top Genre` == "austropop"|`Top Genre` == "australian pop"|
+      `Top Genre` == "classic uk pop"|`Top Genre` == "bubblegum pop"|
+      `Top Genre` == "europop" ~ "pop"
+  ))
+```
+
 
 ```{r oldies-variance}
 spotify_data %>%
@@ -98,10 +146,7 @@ spotify_data %>%
   filter(period == "Present") %>%
   summarise(variance = var(Acousticness))
 ```
-
-### Methodology
-
-Top Genres of songs across decades:
+This increase in variance in acousticness suggests variation from the time period of the "Oldies" to the "Present" that may be due to error in measurement or other factors. 
 
 ```{r group-by-decade}
 spotify_data %>%
@@ -109,8 +154,22 @@ spotify_data %>%
   count(`Top Genre`) %>%
   arrange(desc(n)) 
 ```
+We wanted to ask what the most popular genre for each decade was. The most popular genre across these top 2000 songs by decade is album rock in the 70s. Album rock is also especially popular in the 80s and 60s. 
 
-The most popular genre across these top 2000 songs by decade is album rock in the 70s. Album rock is also especially popular in the 80s and 60s. 
+```{r visualized_genres}
+ggplot(data = spotify_data, mapping = aes(x = broad_genre)) +
+  facet_wrap(~decade) +
+  geom_bar() +
+    labs(x = "Broad Genre", 
+      title = "Broad Genre of Popular Music", 
+      subtitle = "Faceted by decade")
+
+```
+
+
+### Methodology
+
+We will look at the correlation, variance, standard deviations, and IQR of the variables for BPM, energy, valence, acousticness and speechiness. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests. Some limitations of our analysis include other factors which are not variables or included in our modeling and the limited number of samples in our data set. 
 
 ```{r bpm-boxplot}
 ggplot(data = spotify_data, mapping = aes(x = decade, y = `Beats Per Minute (BPM)`, fill = decade)) +
@@ -176,7 +235,6 @@ ggplot(data = spotify_data,
   geom_smooth(method = "lm", se = FALSE) +
   labs(x = "Acousticness", y = "Energy", color = "period")
 ```
-
 
 ### Discussion
 
