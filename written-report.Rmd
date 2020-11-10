@@ -23,47 +23,20 @@ The data that we chose to analyze was curated by Sumat Singh (@iamsumat) on Kagg
 
 The original data set was taken from the playlist on Spotify "Top 2000s" by the user PlaylistMachinery (@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/. This data was uploaded 9 months ago.
 
-Our research question: Has popular music shifted to be more diverse in characteristics such as Top Genre, Beats per Minute (BPM), Acousticness, Speechiness? The goal of our report is to observe how these characteristics changed over time and how these variables may affect one another.
+Our research question: Has popular music shifted to be more diverse in characteristics such as the genre and acousticness? The goal of our report is to observe how these characteristics changed over time and how these variables may affect one another.
   
 This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
-  
-Relevant Variables:
 
-Title: title of the song 
-
-Artist: the musician/group who performed the song 
-
-Top genre: genre of the track year: year it was released 
-
-Beats per minute (BPM): tempo of the song 
-
-Energy: how energetic the song is 
-
-Danceability: how easy the song is to dance to 
-
-Loudness (dB): how loud the song is 
-
-Liveness: the likeliness of the song being a live recording 
-
-Valence: how positive a song is 
-
-Length (duration): the length of a track 
-
-Acousticness: how acoustic a song is 
-
-Speechiness: how much spoken word is in the song 
-
-Popularity: how popular a song is 
 
 ### Exploratory Data Analysis
 
 There are no missing data values so we don't have to clean the data. We will create new variables using the mutate and case_when functions as follows:
 decade: the decade as named by "50s", "60s", etc
 period: "oldies" for before 1990 and "present" for after 1989
-foreign_lang: categorical variable("Yes" for any song whose genre has a foreign country/language in it)
+foreign_lang: categorical variable("TRUE" for any song whose genre has a foreign country/language in it, "FALSE" otherwise)
 broad genre: broad category "pop" or "rock" or etc
 
-We will use dplyr functions to explore our data set in terms of summarising the variance and counting different variables and visualizing them. We are looking for unusual patterns or clusters of observations whose relationships we can further explore through hypothesis testing. 
+We will use dplyr functions to explore our data set in terms of summarising the variance, counting different variables and visualizing them. We are looking for unusual patterns or clusters of observations whose relationships we can further explore through hypothesis testing. 
 
 ```{r load-packages-and-data}
 library(tidyverse)
@@ -85,15 +58,15 @@ spotify_data <- spotify_data %>%
 
 ```{r foreign_languages_variable}
 spotify_data <- spotify_data %>%
-  mutate(foreign_lang = case_when(
+  mutate(foreign_lang = 
     `Top Genre` == "dutch indie" | `Top Genre` == "dutch cabaret" 
     | `Top Genre` == "dutch pop" |`Top Genre` == "dutch americana" |
       `Top Genre` == "german pop"|`Top Genre` == "dutch rock" |
       `Top Genre` == "belgian rock" | `Top Genre` == "finnish metal"|
       `Top Genre` == "german pop rock" | `Top Genre` == "german alternative rock" |`Top Genre` == "italian pop" | `Top Genre` == "latin" |
-      `Top Genre` == "latin alternative"| `Top Genre` == "latin jazz" ~ "Yes"
-  ))
-#HOW TO DO ELSE FOR CASE_WHEN ~ "no"
+      `Top Genre` == "latin alternative"| `Top Genre` == "latin jazz"
+  )
+
 ```
 
 ```{r past-present-variable}
@@ -146,26 +119,17 @@ spotify_data %>%
   filter(period == "Present") %>%
   summarise(variance = var(Acousticness))
 ```
-This increase in variance in acousticness suggests variation from the time period of the "Oldies" to the "Present" that may be due to error in measurement or other factors. 
+We used the summarise function to find the variance of Acousticness in the time period of the "Oldies"(80s and earlier) and to find the variance of Acousticness in the time period of the "Present"(90s and later). Though we don't know if this difference is statistically significant, there is a higher variance for the "Present" period which may be due to more variation in Acousticness in our dataset or an error in measurement. 
 
-```{r group-by-decade}
-spotify_data %>%
-  group_by(decade) %>%
-  count(`Top Genre`) %>%
-  arrange(desc(n)) 
-```
-We wanted to ask what the most popular genre for each decade was. The most popular genre across these top 2000 songs by decade is album rock in the 70s. Album rock is also especially popular in the 80s and 60s. 
 
 ```{r visualized_genres}
-ggplot(data = spotify_data, mapping = aes(x = broad_genre)) +
-  facet_wrap(~decade) +
-  geom_bar() +
+ggplot(data = spotify_data, mapping = aes(x = decade, fill = broad_genre)) +
+  geom_bar(position = "fill")+
     labs(x = "Broad Genre", 
       title = "Broad Genre of Popular Music", 
       subtitle = "Faceted by decade")
-
 ```
-
+The proportion of rock as a popular song genre was highest in the 70s and has decreased since then. The proportion of pop has increased slightly since the 60s. The dataset was started midway through the 50s so there aren't as many data points for genre as the other decades. 
 
 ### Methodology
 
@@ -243,5 +207,7 @@ BPM appears to not have many discrepancies by decade. Valence appears to have de
 Our summary statistics for variance show that the variance of acousticness is larger in the present era of music than it is in the past era of music. 
 
 No variables that we tested for in hit music have become less diverse over time, but only a few became more varied. These were acousticness, as demonstrated by our summary statistics for variance and our conclusion from our hypothesis test, and speechiness, as demonstrated by an increased spread over time by our box plots. 
+
+**say something about the 50s
 
 (Add paragraph about what we would do differently in the final draft)
