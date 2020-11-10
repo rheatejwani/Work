@@ -137,15 +137,25 @@ Older music tends to have a higher median value for acousticness. The median aco
 
 We will look at the correlation, variance, standard deviations, and IQR of the acousticness variable. We will also analyze the changes in genre across the decade through simulation based tests. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests. 
 
+multiple linear regression --> what other factors -- to verify or question
+- 0 or 1 for foreign lang
+
+presentation
+answer why do I care for different models/graphs
+clear chronological order
 
 ###Linear model for acousticness
+clarify what var or variance is//context
 
 ```{r linear-model}
 acousticness_model <- lm(var ~ Year, data=spotify_data)
-  tidy(acousticness_model) %>%
-    select(term, estimate)
+  tidy(acousticness_model)
 ```
 The linear equation for the model is $\widehat{Acousticness}= -5731.744 + 3.277 \times year$
+
+intercept -when year is 0 extrapolation
+recode years(earliest as 0), latest
+this year - earliest year --> progression 
 
 ```{r model-visualization}
 ggplot(data=acousticness_model, mapping=aes(x=Year, y=var)) +
