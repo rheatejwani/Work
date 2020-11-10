@@ -35,6 +35,7 @@ decade: the decade as named by "50s", "60s", etc
 period: "oldies" for before 1990 and "present" for after 1989
 foreign_lang: categorical variable("TRUE" for any song whose genre has a foreign country/language in it, "FALSE" otherwise)
 broad genre: broad category "pop" or "rock" or etc
+var: variance of Acousticness per year
 
 We will use dplyr functions to explore our data set in terms of summarising the variance, counting different variables and visualizing them. We are looking for unusual patterns or clusters of observations whose relationships we can further explore through hypothesis testing. 
 
@@ -107,19 +108,11 @@ spotify_data <- spotify_data %>%
   ))
 ```
 
-
-```{r oldies-variance}
-spotify_data %>%
-  filter(period == "Oldies") %>%
-  summarise(variance = var(Acousticness))
+```{r variance-per-year}
+spotify_data <- spotify_data %>%
+  group_by(Year) %>%
+  mutate(var=var(Acousticness))
 ```
-
-```{r present-variance}
-spotify_data %>%
-  filter(period == "Present") %>%
-  summarise(variance = var(Acousticness))
-```
-We used the summarise function to find the variance of Acousticness in the time period of the "Oldies"(80s and earlier) and to find the variance of Acousticness in the time period of the "Present"(90s and later). Though we don't know if this difference is statistically significant, there is a higher variance for the "Present" period which may be due to more variation in Acousticness in our dataset or an error in measurement. 
 
 
 ```{r visualized_genres}
@@ -131,82 +124,69 @@ ggplot(data = spotify_data, mapping = aes(x = decade, fill = broad_genre)) +
 ```
 The proportion of rock as a popular song genre was highest in the 70s and has decreased since then. The proportion of pop has increased slightly since the 60s. The dataset was started midway through the 50s so there aren't as many data points for genre as the other decades. 
 
+```{r acousticness-boxplot}
+  ggplot(data = spotify_data, mapping = aes(x = decade, y = Acousticness, fill = decade)) +
+         geom_boxplot() +
+  labs(title = "Acousticness vs. Decade")
+```
+
+Older music tends to have a higher median value for acousticness. The median acousticness has remained relatively constant from the 80s to the 2010s. Additionally, from the 80s to the 2010s, the majority of the IQR overlaps. This could be due to an increase in technology used in music production in the modern era.
+
+
 ### Methodology
 
-We will look at the correlation, variance, standard deviations, and IQR of the variables for BPM, energy, valence, acousticness and speechiness. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests. Some limitations of our analysis include other factors which are not variables or included in our modeling and the limited number of samples in our data set. 
+We will look at the correlation, variance, standard deviations, and IQR of the acousticness variable. We will also analyze the changes in genre across the decade through simulation based tests. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests. 
 
-```{r bpm-boxplot}
-ggplot(data = spotify_data, mapping = aes(x = decade, y = `Beats Per Minute (BPM)`, fill = decade)) +
-         geom_boxplot() +
-  labs(title = "BPM vs. Decade")
+
+###Linear model for acousticness
+
+```{r linear-model}
+acousticness_model <- lm(var ~ Year, data=spotify_data)
+  tidy(acousticness_model) %>%
+    select(term, estimate)
+```
+The linear equation for the model is $\widehat{Acousticness}= -5731.744 + 3.277 \times year$
+
+```{r model-visualization}
+ggplot(data=acousticness_model, mapping=aes(x=Year, y=var)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE) +
+  labs(title="Variance vs. Year", x="Year", y="Variance (of Acousticness)")
 ```
 
-```{r valence-boxplot}
-  ggplot(data = spotify_data, mapping = aes(x = decade, y = Valence, fill = decade)) +
-         geom_boxplot() +
-  labs(title = "Valence vs. Decade")
+###Hypothesis test for genre (foreign language)
+
+H0: The proportion of popular foreign language songs in the modern decades is equal to the proportion of popular foreign language songs in the older decades ($\rho_m = \rho_o$, where $\rho_m$ is the proportion of popular foreign language songs in the modern decades and $\rho_o$ the proportion of popular foreign language songs in the older decades)
+
+Ha: The proportion of popular foreign language songs in the modern decades is greater than the proportion of popular foreign language songs in the older decades ($\rho_m > \rho_o$, where $\rho_m$ is the proportion of popular foreign language songs in the modern decades and $\rho_o$ the proportion of popular foreign language songs in the older decades)
+
+Alpha: 0.05 ($\alpha = 0.05$)
+
+```{r simulation-test}
+set.seed(1234)
+null_dist <- spotify_data %>%
+  specify(foreign_lang~period, success = "TRUE") %>%
+  hypothesize(null="independence") %>%
+  generate(reps=1000, type = "permute") %>%
+  calculate(stat="diff in props", order = c("Present", "Oldies"))
+null_dist
+```
+```{r p-value}
+obs_diff <- spotify_data %>%
+  specify(foreign_lang~period, success="TRUE") %>%
+  calculate(stat="diff in props", order= c("Present", "Oldies"))%>%
+  pull()
+
+null_dist %>%
+  filter(stat > obs_diff) %>%
+  summarise(p_val = n()/nrow(null_dist))
 ```
 
-```{r speechiness-boxplot}
-  ggplot(data = spotify_data, mapping = aes(x = decade, y = Speechiness, fill = decade)) +
-         geom_boxplot() +
-  labs(title = "Speechiness vs. Decade")
-```
-Since we are interested in discovering whether the level of acousticness has changed over time, these are our hypotheses:
-
-H0: The true mean acousticness of hit music in the 90s, 2000s, and 2010s is equal to the true mean acousticness of hit music in the 50s, 60s, 70s, and 80s. 
-
-Ha: The true mean acousticness of hit music in the 90s, 2000s, and 2010s is less than the true mean acousticness of hit music in the 50s, 60s, 70s, and 80s. 
-
-Significance level: alpha = 0.05
-
-```{r std-dev-null}
-set.seed(10)  
-null_dist_acousticness <- spotify_data %>% 
-  specify(Acousticness ~ period) %>%
-  hypothesize(null = "independence") %>%
-  generate(reps = 1000, type = "permute") %>% 
-  calculate(stat = "diff in means", order = c("Present", "Oldies"))
-
-obs_diff_acousticness <- spotify_data %>% 
-  specify(Acousticness ~ period) %>%
-  calculate(stat = "diff in means", order = c("Present", "Oldies"))
-obs_diff_acousticness
-
-null_dist_acousticness %>%
-  get_p_value(obs_stat = obs_diff_acousticness, direction = "less")
-```
-
-Our p-value is very little and smaller than our significance level of 0.05, so we will reject the null. We have sufficient evidence that the true mean acousticness of hit music in the 90s, 2000s, and 2010s is less than the true mean acousticness of hit music in the 50s, 60s, 70s, and 80s. 
-
-# we are confused as to how to use simulation with our dataset, so we would appreciate help/advice on how to do this please! :)
-
-Linear Regression of Energy vs. Acousticness:
-
-```{r lm-energy-decade}
-m_e_yr <- lm(Energy ~ Acousticness, data = spotify_data)
-m_e_yr %>%
-  tidy() %>%
-  select(term, estimate)
-```
-For each increase in one unit of Acousticness, the Energy is predicted to decrease by -0.508. 
-If there is no units of Acousticness, the Energy is predicted to be 74.34. 
-
-```{r}
-ggplot(data = spotify_data,
-       mapping = aes(y = Energy, x = Acousticness, color = period)) +
-  geom_point(alpha = 0.5) + 
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(x = "Acousticness", y = "Energy", color = "period")
-```
+The p-value is very small, which is less than the pre-determined alpha level of 0.05, so we reject the null hypothesis. There is sufficient evidence to conlcude that the proportion of popular foreign language songs in the modern decades is greater than the proportion of popular foreign language songs in the older decades.
 
 ### Discussion
 
-BPM appears to not have many discrepancies by decade. Valence appears to have decreased throughout time. The spread of speechiness appears to be increasing over time including the number of outliers, which indicates a more widespread acceptance of typically "speechy" genres in popular music, like hip hop. 
-
-Our summary statistics for variance show that the variance of acousticness is larger in the present era of music than it is in the past era of music. 
-
-No variables that we tested for in hit music have become less diverse over time, but only a few became more varied. These were acousticness, as demonstrated by our summary statistics for variance and our conclusion from our hypothesis test, and speechiness, as demonstrated by an increased spread over time by our box plots. 
+LIMITATIONS: Some limitations of our analysis include other factors which are not variables or included in our modeling and the limited number of samples in our data set. 
 
 **say something about the 50s
 
