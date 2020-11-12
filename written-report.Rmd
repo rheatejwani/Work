@@ -5,13 +5,16 @@ date: "10/25/20"
 output: pdf_document
 ---
 
+Questions:
+What can we improve
+Linear regression and interactive model graph
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = FALSE, 
                       message = FALSE)
 ```
-
-Your written report goes here! Before you submit, make sure your code chunks are turned off with `echo = FALSE` and there are no warnings or messages with `warning = FALSE` and `message = FALSE` 
 
 ### Introduction and Data
 
@@ -70,6 +73,18 @@ spotify_data <- spotify_data %>%
 
 ```
 
+```{r foreign_lang_01}
+spotify_data <- spotify_data %>%
+  mutate(foreign_lang_factor = case_when(foreign_lang == "TRUE" ~ 1, 
+                                         foreign_lang == "FALSE" ~ 0))
+```
+
+```{r year-since-1956}
+spotify_data <- spotify_data %>%
+  mutate(year = Year - 1956)
+```
+
+
 ```{r past-present-variable}
 spotify_data <- spotify_data %>%
   mutate(period = case_when(Year >= 1956 & Year <= 1959 ~ "Oldies",
@@ -104,9 +119,17 @@ spotify_data <- spotify_data %>%
       `Top Genre` == "german pop"| `Top Genre` == "baroque pop"|
       `Top Genre` == "austropop"|`Top Genre` == "australian pop"|
       `Top Genre` == "classic uk pop"|`Top Genre` == "bubblegum pop"|
-      `Top Genre` == "europop" ~ "pop"
+      `Top Genre` == "europop" ~ "pop", 
+      TRUE ~ "Other"
   ))
 ```
+
+```{r pop-nonpop}
+spotify_data<- spotify_data %>%
+  mutate(pop = case_when(broad_genre == "pop" ~ 1,
+                         broad_genre == "rock" | broad_genre == "Other" ~ 0))
+```
+
 
 ```{r variance-per-year}
 spotify_data <- spotify_data %>%
@@ -137,32 +160,51 @@ Older music tends to have a higher median value for acousticness. The median aco
 
 We will look at the correlation, variance, standard deviations, and IQR of the acousticness variable. We will also analyze the changes in genre across the decade through simulation based tests. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests. 
 
-multiple linear regression --> what other factors -- to verify or question
-- 0 or 1 for foreign lang
+We will be using the variable `var`, which is the variance of the `Acousticness` of the songs in our dataset. 
 
 presentation
 answer why do I care for different models/graphs
 clear chronological order
 
 ###Linear model for acousticness
-clarify what var or variance is//context
 
 ```{r linear-model}
-acousticness_model <- lm(var ~ Year, data=spotify_data)
+acousticness_model <- lm(var ~ year, data=spotify_data)
   tidy(acousticness_model)
 ```
-The linear equation for the model is $\widehat{Acousticness}= -5731.744 + 3.277 \times year$
+The linear equation for the model is $\widehat{Acousticness}= 678.192 + 3.277 \times year$
 
 intercept -when year is 0 extrapolation
 recode years(earliest as 0), latest
 this year - earliest year --> progression 
 
-```{r model-visualization}
-ggplot(data=acousticness_model, mapping=aes(x=Year, y=var)) +
+```{r model-visualization-1}
+ggplot(data=acousticness_model, mapping=aes(x = year, y=var)) +
   geom_point() +
   geom_smooth(method="lm", se=FALSE) +
   labs(title="Variance vs. Year", x="Year", y="Variance (of Acousticness)")
 ```
+```{r var-foreign-time}
+acousticness_year_fl <- lm(var ~ year + foreign_lang_factor + year*foreign_lang_factor, data=spotify_data)
+  tidy(acousticness_year_fl)
+```
+
+$\widehat{Acousticness}= 675.288 + 3.365 \times year - 44.060 \times foreign_lang_factor - 0.978 \times year:foreign_lang_factor$
+
+R-squared values for the models:
+
+```{r glance-main}
+glance(acousticness_model) %>%
+  select(r.squared, adj.r.squared)
+```
+
+```{r glance-int}
+glance(acousticness_year_fl) %>%
+  select(r.squared, adj.r.squared)
+```
+**move this to conclusion 
+
+Our linear model where we predict the acousticness of a song with the number of years since 1956 is a better fit for the data because its adjusted r-squared value is greater than the adjusted r-squared value for the interaction model where we predict the acousticness of a song with the number of years since 1956 and whether the song is in a foreign language or not. 
 
 ###Hypothesis test for genre (foreign language)
 
@@ -181,6 +223,7 @@ null_dist <- spotify_data %>%
   calculate(stat="diff in props", order = c("Present", "Oldies"))
 null_dist
 ```
+
 ```{r p-value}
 obs_diff <- spotify_data %>%
   specify(foreign_lang~period, success="TRUE") %>%
@@ -192,7 +235,8 @@ null_dist %>%
   summarise(p_val = n()/nrow(null_dist))
 ```
 
-The p-value is very small, which is less than the pre-determined alpha level of 0.05, so we reject the null hypothesis. There is sufficient evidence to conlcude that the proportion of popular foreign language songs in the modern decades is greater than the proportion of popular foreign language songs in the older decades.
+The p-value is very small, which is less than the pre-determined alpha level of 0.05, so we reject the null hypothesis. There is sufficient evidence to conclude that the proportion of popular foreign language songs in the modern decades is greater than the proportion of popular foreign language songs in the older decades.
+
 
 ### Discussion
 
