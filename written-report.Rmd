@@ -26,19 +26,21 @@ The data that we chose to analyze was curated by Sumat Singh (@iamsumat) on Kagg
 
 The original data set was taken from the playlist on Spotify "Top 2000s" by the user PlaylistMachinery (@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/. This data was uploaded 9 months ago.
 
-Our research question: Has popular music shifted to be more diverse in characteristics such as the genre and acousticness? The goal of our report is to observe how these characteristics changed over time and how these variables may affect one another.
-  
 This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
 
+The variables we will be focusing on are `acousticness`, which is a measure from 0 to 100 representing the confidence that the track is acoustic (with 100 being high confidence), `year`, which is the year the track was popular in, and `genre`, which is the genre of the music. We expanded upon our chosen variables in the metholody section of this report.
 
-### Exploratory Data Analysis
+Our research question: Has popular music shifted to be more diverse in characteristics such as the genre and acousticness? The goal of our report is to observe how these characteristics changed over time and how these variables may affect one another.
+  
+
+### Methodology
 
 There are no missing data values so we don't have to clean the data. We will create new variables using the mutate and case_when functions as follows:
 decade: the decade as named by "50s", "60s", etc
 period: "oldies" for before 1990 and "present" for after 1989
 foreign_lang: categorical variable("TRUE" for any song whose genre has a foreign country/language in it, "FALSE" otherwise)
 broad genre: broad category "pop" or "rock" or etc
-var: variance of Acousticness per year
+sd: standard deviation of Acousticness per year (grouped by foreign language)
 
 We will use dplyr functions to explore our data set in terms of summarising the variance, counting different variables and visualizing them. We are looking for unusual patterns or clusters of observations whose relationships we can further explore through hypothesis testing. 
 
@@ -134,16 +136,15 @@ spotify_data<- spotify_data %>%
 ```{r variance-per-year}
 spotify_data <- spotify_data %>%
   group_by(Year) %>%
-  mutate(var=var(Acousticness))
+  mutate(sd=sd(Acousticness))
 ```
 
 
 ```{r visualized_genres}
 ggplot(data = spotify_data, mapping = aes(x = decade, fill = broad_genre)) +
   geom_bar(position = "fill")+
-    labs(x = "Broad Genre", 
-      title = "Broad Genre of Popular Music", 
-      subtitle = "Faceted by decade")
+    labs(x = "Decade", 
+      title = "Broad Genre of Popular Music")
 ```
 The proportion of rock as a popular song genre was highest in the 70s and has decreased since then. The proportion of pop has increased slightly since the 60s. The dataset was started midway through the 50s so there aren't as many data points for genre as the other decades. 
 
@@ -155,56 +156,26 @@ The proportion of rock as a popular song genre was highest in the 70s and has de
 
 Older music tends to have a higher median value for acousticness. The median acousticness has remained relatively constant from the 80s to the 2010s. Additionally, from the 80s to the 2010s, the majority of the IQR overlaps. This could be due to an increase in technology used in music production in the modern era.
 
-
-### Methodology
-
-We will look at the correlation, variance, standard deviations, and IQR of the acousticness variable. We will also analyze the changes in genre across the decade through simulation based tests. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests. 
-
-We will be using the variable `var`, which is the variance of the `Acousticness` of the songs in our dataset. 
-
-presentation
-answer why do I care for different models/graphs
-clear chronological order
-
-###Linear model for acousticness
-
-```{r linear-model}
-acousticness_model <- lm(var ~ year, data=spotify_data)
-  tidy(acousticness_model)
+```{r foreign-langauge}
+spotify_data %>%
+  group_by(decade) %>%
+  count(foreign_lang)
 ```
-The linear equation for the model is $\widehat{Acousticness}= 678.192 + 3.277 \times year$
-
-intercept -when year is 0 extrapolation
-recode years(earliest as 0), latest
-this year - earliest year --> progression 
-
-```{r model-visualization-1}
-ggplot(data=acousticness_model, mapping=aes(x = year, y=var)) +
-  geom_point() +
-  geom_smooth(method="lm", se=FALSE) +
-  labs(title="Variance vs. Year", x="Year", y="Variance (of Acousticness)")
+```{r visualized-foreign-lang}
+ggplot(data = spotify_data, mapping = aes(x = decade, fill = foreign_lang)) +
+  geom_bar(position = "fill")+
+    labs(x = "Decade", 
+      title = "Proportion of Foreign Language Songs in Popular Music")
 ```
-```{r var-foreign-time}
-acousticness_year_fl <- lm(var ~ year + foreign_lang_factor + year*foreign_lang_factor, data=spotify_data)
-  tidy(acousticness_year_fl)
-```
+The proportion of popular foreign language songs has increased over time. We will further investigate this in the methodology section.
 
-$\widehat{Acousticness}= 675.288 + 3.365 \times year - 44.060 \times foreign_lang_factor - 0.978 \times year:foreign_lang_factor$
 
-R-squared values for the models:
+### Results
 
-```{r glance-main}
-glance(acousticness_model) %>%
-  select(r.squared, adj.r.squared)
-```
+We will look at the correlation, standard deviations, and IQR of the acousticness variable. We will also analyze the changes in genre across the decade through simulation based tests. We will visualize our data using ggplot with scatterplots, boxplots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests. 
 
-```{r glance-int}
-glance(acousticness_year_fl) %>%
-  select(r.squared, adj.r.squared)
-```
-**move this to conclusion 
+We will be using the variable `sd`, which is the standard deviation of the `Acousticness` of the songs in our dataset. 
 
-Our linear model where we predict the acousticness of a song with the number of years since 1956 is a better fit for the data because its adjusted r-squared value is greater than the adjusted r-squared value for the interaction model where we predict the acousticness of a song with the number of years since 1956 and whether the song is in a foreign language or not. 
 
 ###Hypothesis test for genre (foreign language)
 
@@ -236,6 +207,57 @@ null_dist %>%
 ```
 
 The p-value is very small, which is less than the pre-determined alpha level of 0.05, so we reject the null hypothesis. There is sufficient evidence to conclude that the proportion of popular foreign language songs in the modern decades is greater than the proportion of popular foreign language songs in the older decades.
+
+###Linear model for acousticness
+
+```{r linear-model}
+acousticness_model <- lm(sd ~ year, data=spotify_data)
+  tidy(acousticness_model)
+```
+The linear equation for the model is $\widehat{Acousticness}= 25.842 +0.0596 \times year$
+
+The intercept of this graph is when the year is 1956, we expect the standard deviation for acousticness to be 25.842, holding all else constant. For each additional year, we expect the standard deviation of acousticness to increase by 0.0596, holding all else constant.
+
+
+```{r model-visualization-1}
+ggplot(data=acousticness_model, mapping=aes(x = year, y=sd)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE) +
+  labs(title="Standard Deviation vs. Year", x="Year since 1956", y="Standard Deviation (of Acousticness)")
+```
+The standard deviation in the acousticness of popular songs has increased over time.
+
+
+```{r var-foreign-time}
+acousticness_year_pop <- lm(sd ~ year + pop + year*pop, data=spotify_data)
+  tidy(acousticness_year_pop)
+```
+
+$\widehat{Acousticness}= 25.858 + 0.059 \times year - 0.113 \times foreign_lang_factor - 0.003 \times year:foreign_lang_factor$
+
+The intercept of this graph is when the year is 1956, we expect the standard deviation for acousticness to be 25.858, holding all else constant. For each additional year, we expect the standard deviation of acousticness to increase by 0.059, holding pop constant. We expect pop songs to have a standard deviation of acousticness that is 0.113 less than songs that are not pop, on average, holding year constant. **EXPLAIN INTERACTION**
+
+```{r}
+ggplot(data=acousticness_year_pop, mapping=aes(x = year, y=sd, color=as.factor(pop))) +
+  geom_point() +
+  geom_abline(slope=0.05913789, intercept=25.85778059, color="red")+
+  geom_abline(slope=(0.05913789	+ 0.00277569), intercept= (25.85778059	-0.11327760), color="dark cyan")+
+  labs(title="Standard Deviation vs. Year", subtitle="colored by 'pop'", x="Year", y="Standard Deviation (of Acousticness)")
+```
+
+
+R-squared values for the models:
+
+```{r glance-main}
+glance(acousticness_model) %>%
+  select(r.squared, adj.r.squared)
+```
+
+```{r glance-int}
+glance(acousticness_year_pop) %>%
+  select(r.squared, adj.r.squared)
+```
+
 
 
 ### Discussion
