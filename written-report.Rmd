@@ -5,11 +5,6 @@ date: "10/25/20"
 output: pdf_document
 ---
 
-Questions:
-What can we improve
-Linear regression and interactive model graph
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = FALSE, 
@@ -20,7 +15,7 @@ knitr::opts_chunk$set(echo = FALSE,
 
 Music is one of the most accessible ways to experience and communicate emotional experiences and opinions across cultural norms and language barriers. Popular music is especially able to broadcast its message, but popularity depends on the breadth of people that enjoy listening to it. 
 
-Trends in popular music are constantly changing, and these changes will affect globalization and cultural communication. For instance, hip-hop music, an aspect of the hip-hop cultural movement, was stated to be the most popular genre of music in the U.S. in 2017 in this Rolling Stone article: https://www.rollingstone.com/music/music-news/hip-hop-continued-to-dominate-the-music-business-in-2018-774422/. As students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us.
+Trends in popular music are constantly changing, and these changes will affect globalization and cultural communication. For instance, hip-hop music, an aspect of the hip-hop cultural movement, was stated to be the most popular genre of music in the U.S. in 2017 in this Rolling Stone article: https://www.rollingstone.com/music/music-news/hip-hop-continued-to-dominate-the-music-business-in-2018-774422/. As students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us. 
 
 The data that we chose to analyze was curated by Sumat Singh (@iamsumat) on Kaggle, and contains variables that measure various characteristics of the most popular music in the world over the years 1956 to 2019 on the streaming service Spotify. https://www.kaggle.com/iamsumat/spotify-top-2000s-mega-dataset 
 
@@ -28,19 +23,22 @@ The original data set was taken from the playlist on Spotify "Top 2000s" by the 
 
 This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
 
-The variables we will be focusing on are `acousticness`, which is a measure from 0 to 100 representing the confidence that the track is acoustic (with 100 being high confidence), `year`, which is the year the track was popular in, and `genre`, which is the genre of the music. We expanded upon our chosen variables in the metholody section of this report.
+The variables we will be focusing on are `acousticness`, which is a measure from 0 to 100 representing the confidence measure that the song is acoustic (with 100 being high confidence and 0 being no/low confidence), `year`, which is the year the song was created, and `genre`, which is the genre of the music. We chose acousticness because we thought there trends observed in acousticness would reflect the development of technology used in music production in the modern era. Additionally, we focused on genres outside of english speaking countries because an increase in technology may also increase cross cultural communication including music.
 
-Our research question: Has popular music shifted to be more diverse in characteristics such as the genre and acousticness? The goal of our report is to observe how these characteristics changed over time and how these variables may affect one another.
-  
+We explored patterns and mutated our chosen variables in the methodology section of this report to better explore the change of the standard deviation of Acousticness and the prevalence of non-english languages in popular music over time. 
+
+Our research question: Does our data provide sufficient evidence that the proportion of songs in non english languages has increased from the time period of 1956-1989 to the time period of 1990 to present? Does our data provide sufficient evidence that the standard deviation in Acousticness has increased over time? The goal of our report is to observe how popular music has shifted to be more diverse in characteristics such as non english languages or Acousticness over time. 
 
 ### Methodology
 
 There are no missing data values so we don't have to clean the data. We will create new variables using the mutate and case_when functions as follows:
-decade: the decade as named by "50s", "60s", etc
-period: "oldies" for before 1990 and "present" for after 1989
-foreign_lang: categorical variable("TRUE" for any song whose genre has a foreign country/language in it, "FALSE" otherwise)
-broad genre: broad category "pop" or "rock" or etc
-sd: standard deviation of Acousticness per year (grouped by foreign language)
+
+decade: categorical variable indicating the decade when the song was created using the categorical name of "50s", "60s", and so on
+period: categorical variable in which "Oldies" represents when Year is before 1990 and "Present" for when Year is after 1989
+foreign_lang: categorical variable in which "TRUE" stands for any song whose Top Genre name has a non english speaking country in it, "FALSE" otherwise
+pop: categorical variable in which "TRUE" stands for any song whose Top Genre name has "pop" in it, "FALSE" otherwise
+sd: standard deviation of Acousticness per year 
+year: numerical variable representing the years since the first Year in our data set(1956)
 
 We will use dplyr functions to explore our data set in terms of summarising the variance, counting different variables and visualizing them. We are looking for unusual patterns or clusters of observations whose relationships we can further explore through hypothesis testing. 
 
@@ -75,41 +73,14 @@ spotify_data <- spotify_data %>%
 
 ```
 
-```{r foreign_lang_01}
-spotify_data <- spotify_data %>%
-  mutate(foreign_lang_factor = case_when(foreign_lang == "TRUE" ~ 1, 
-                                         foreign_lang == "FALSE" ~ 0))
-```
-
 ```{r year-since-1956}
 spotify_data <- spotify_data %>%
   mutate(year = Year - 1956)
 ```
 
-
-```{r past-present-variable}
+```{r pop_variable}
 spotify_data <- spotify_data %>%
-  mutate(period = case_when(Year >= 1956 & Year <= 1959 ~ "Oldies",
-                            Year >= 1960 & Year <= 1969 ~ "Oldies",
-                            Year >= 1970 & Year <= 1979 ~ "Oldies",
-                            Year >= 1980 & Year <= 1989 ~ "Oldies",
-                            Year >= 1990 & Year <= 1999 ~ "Present",
-                            Year >= 2000 & Year <= 2009 ~ "Present",
-                            Year >= 2010 & Year <= 2019 ~ "Present",))
-```
-
-```{r clustered-genre-variable}
-spotify_data <- spotify_data %>%
-  mutate(broad_genre = case_when(
-    `Top Genre` == "album rock"|`Top Genre` == "dutch rock" |
-      `Top Genre` == "belgian rock" |  `Top Genre` == "german pop rock"
-    | `Top Genre` == "german alternative rock"|  `Top Genre` == "classic rock"|
-    `Top Genre` == "alternative pop rock"| `Top Genre` == "modern rock"|
-      `Top Genre` == "alternative rock"| `Top Genre` == "garage rock"|
-      `Top Genre` == "modern folk rock"| `Top Genre` == "irish rock"|
-      `Top Genre` == "art rock"| `Top Genre` == "danish pop rock"|
-      `Top Genre` == "celtic rock"| `Top Genre` == "blues rock"|
-      `Top Genre` == "soft rock"| `Top Genre` == "glam rock" ~ "rock",
+  mutate(pop = case_when(
     `Top Genre` == "acoustic pop"|`Top Genre` == "dutch pop" |
       `Top Genre` == "barbadian pop" |  `Top Genre` == "folk-pop" 
     | `Top Genre` == "electropop"| `Top Genre` == "belgian pop"|
@@ -126,49 +97,47 @@ spotify_data <- spotify_data %>%
   ))
 ```
 
-```{r pop-nonpop}
-spotify_data<- spotify_data %>%
-  mutate(pop = case_when(broad_genre == "pop" ~ 1,
-                         broad_genre == "rock" | broad_genre == "Other" ~ 0))
-```
 
-
-```{r variance-per-year}
+```{r standarddev-per-year}
 spotify_data <- spotify_data %>%
   group_by(Year) %>%
   mutate(sd=sd(Acousticness))
 ```
 
-
-```{r visualized_genres}
-ggplot(data = spotify_data, mapping = aes(x = decade, fill = broad_genre)) +
-  geom_bar(position = "fill")+
-    labs(x = "Decade", 
-      title = "Broad Genre of Popular Music")
-```
-The proportion of rock as a popular song genre was highest in the 70s and has decreased since then. The proportion of pop has increased slightly since the 60s. The dataset was started midway through the 50s so there aren't as many data points for genre as the other decades. 
-
+We wanted to look at the spread of Acousticness over the different decades to see if there were any identifiable patterns. We chose to use a boxplot because it shows us the IQR, median and whether there are any outliers. 
 ```{r acousticness-boxplot}
   ggplot(data = spotify_data, mapping = aes(x = decade, y = Acousticness, fill = decade)) +
          geom_boxplot() +
   labs(title = "Acousticness vs. Decade")
 ```
 
-Older music tends to have a higher median value for acousticness. The median acousticness has remained relatively constant from the 80s to the 2010s. Additionally, from the 80s to the 2010s, the majority of the IQR overlaps. This could be due to an increase in technology used in music production in the modern era.
+Older music tends to have a higher median value for acousticness. The median acousticness has remained relatively constant from the 1990s to the 2010s and the majority of the interquartile range overlaps and is around the same size, which indicates they have similar spreads for Acousticness. There aren't any outliers in our dataset.
 
-```{r foreign-langauge}
-spotify_data %>%
-  group_by(decade) %>%
-  count(foreign_lang)
-```
-```{r visualized-foreign-lang}
+We wanted to look at the proportion of foreign language songs changing over different decades to see if there were any patterns we could investigate. We chose to use a bar plot since it effectively visualizes proportion.
+
+```{r visualized-foreign-lang-proportion}
 ggplot(data = spotify_data, mapping = aes(x = decade, fill = foreign_lang)) +
   geom_bar(position = "fill")+
     labs(x = "Decade", 
       title = "Proportion of Foreign Language Songs in Popular Music")
 ```
-The proportion of popular foreign language songs has increased over time. We will further investigate this in the methodology section.
+The proportion of popular foreign language songs has increased over time. We noticed that the proportion of foreign language in the 50s is 0 or close to 0 and we think this is because we don't have as many observations in this decade since our data set starts at 1956.
 
+We will further investigate the change in the number of foreign language songs in popular music over two time periods. We have decided to divide up the years into these time periods because the internet became widely available in the public in 1993, so people were able to discover and enjoy songs from other countries.
+```{r period-variable}
+spotify_data <- spotify_data %>%
+  mutate(period = case_when(Year >= 1956 & Year <= 1959 ~ "Oldies",
+                            Year >= 1960 & Year <= 1969 ~ "Oldies",
+                            Year >= 1970 & Year <= 1979 ~ "Oldies",
+                            Year >= 1980 & Year <= 1989 ~ "Oldies",
+                            Year >= 1990 & Year <= 1999 ~ "Present",
+                            Year >= 2000 & Year <= 2009 ~ "Present",
+                            Year >= 2010 & Year <= 2019 ~ "Present",))
+```
+
+We used simulation-based hypothesis testing to see if the proportion of popular songs in non english languages increased from the "Oldies" period to the "Present" period. We want to be able to test our null and alternative hypotheses and generate a p-value so we can answer our research question about whether we have significant evidence to claim that the proportion of non english songs in popular music has increased from the "Oldies" time period to the "Present" time period.
+
+We used linear and interaction effects modeling to examine how the standard deviation of Acousticness has changed over time. This will allow us to represent the relationship between year, standard deviation of Acousticness, and whether a song is in the "pop" genre with a function. 
 
 ### Results
 
