@@ -139,13 +139,9 @@ spotify_data <- spotify_data %>%
 
 We will use simulation-based hypothesis testing to see if the proportion of `foreign_lang` songs in this data set increased from the "Oldies" period to the "Present" period. We want to be able to test our null and alternative hypotheses and generate a p-value so we can answer our research question about whether we have significant evidence to claim that the proportion of non-English songs in popular music has increased from the "Oldies" time period to the "Present" time period. 
 
-We used linear and interaction effects modeling to examine how the standard deviation of `Acousticness` has changed over time. This will allow us to represent the relationship between year, standard deviation of `Acousticness`, and whether a song is in the "pop" genre with a function. 
+We will use linear and interaction effects modeling to examine how the standard deviation of `Acousticness` has changed over time. This will allow us to represent the relationship between year, standard deviation of `Acousticness`, and whether a song is in the "pop" genre with a function. 
 
 ## Results
-
-We will look at the correlation, standard deviations, and IQR of the `Acousticness` variable. We will also analyze the changes in genre across the decade through simulation based tests. We will visualize our data using ggplot with scatter plots, box plots and histograms. We will try to use linear models and the tools from library(broom). We can use summary statistics to find the mean, median and range of our data. We will also use the library(tidyverse) functions to explore our data set. We will find the p-value and use hypothesis tests to analyze the statistical significance of our tests. 
-
-We will be using the variable `sd`, which is the standard deviation of the `Acousticness` of the songs in our data set. 
 
 ### Hypothesis test for non-English popular songs
 
@@ -162,7 +158,6 @@ null_dist <- spotify_data %>%
   hypothesize(null="independence") %>%
   generate(reps=1000, type = "permute") %>%
   calculate(stat="diff in props", order = c("Present", "Oldies"))
-null_dist
 ```
 
 ```{r p-value}
@@ -178,14 +173,19 @@ null_dist %>%
 
 The p-value is very small, which is less than the pre-determined alpha level of 0.05, so we reject the null hypothesis. There is sufficient evidence to conclude that the proportion of popular foreign language songs in the modern decades is greater than the proportion of popular foreign language songs in the older decades.
 
-### Linear model for acousticness
+```{r visualized_hypothesis_test}
+visualize(null_dist)+
+  geom_vline(xintercept = obs_diff, color = "dark cyan")
+```
+### Linear model for standard deviation of acousticness
 
 ```{r linear-model}
 acousticness_model <- lm(sd ~ year, data=spotify_data)
   tidy(acousticness_model)
 ```
+We will be using the variable `sd`, which is the standard deviation of the `Acousticness` of the songs per year.
 
-The linear equation for the model is $\widehat{Acousticness}= 25.842 + 0.0596 \times year$
+The linear equation for the model is $\widehat{sd of Acousticness}= 25.842 + 0.0596 \times year$
 
 The intercept of this graph is when the year is 1956, we expect the standard deviation for acousticness to be 25.842, holding all else constant. For each additional year, we expect the standard deviation of acousticness to increase by 0.0596, holding all else constant.
 
@@ -204,7 +204,7 @@ acousticness_year_pop <- lm(sd ~ year + pop + year*pop, data=spotify_data)
   tidy(acousticness_year_pop)
 ```
 
-$\widehat{Acousticness}= 25.858 + 0.059 \times year - 0.113 \times foreign_lang_factor - 0.003 \times year:foreign_lang_factor$
+$\widehat{sdAcousticness}= 25.858 + 0.059 \times year - 0.113 \times foreign_lang_factor - 0.003 \times year:foreign_lang_factor$
 
 The intercept of this graph is when the year is 1956, we expect the standard deviation for acousticness to be 25.858, holding all else constant. For each additional year, we expect the standard deviation of acousticness to increase by 0.059, holding pop constant. We expect pop songs to have a standard deviation of acousticness that is 0.113 less than songs that are not pop, on average, holding year constant. **EXPLAIN INTERACTION**
 
@@ -232,8 +232,11 @@ Because the adjusted $R^2$ value is larger for the non-interactive linear model 
 
 ## Discussion
 
-LIMITATIONS: Some limitations of our analysis include other factors which are not variables or included in our modeling and the limited number of samples in our data set. 
+We have learned using our simulation-based hypothesis test that there is significant evidence that the proportion of non english songs in popular music has increased from the “Oldies” time period of before 1990 to the “Present” time period of after 1989. We have learned that there is not enough evidence to show using linear regression with and without interaction effects that the standard deviation of Acousticness increased over time.
 
-**say something about the 50s
+The data in general appeared to be pretty reliable but given it was taken from Spotify, it may have eliminated some pieces of data coming in from other methods of listening to music like Apple Music. The validity of our categorical variables like Top Genre and pop are questionable because these are subjective factors and the labeling of one song as “alternative pop rock” or “pop rock” is subjective to the listener. There are limitations to the analysis we can do with this data set, since there may be many other factors that are not variables which we cannot include in our modeling which impact the diversity of popular music. In addition, we have a limited number of samples of popular music. 
 
-(Add paragraph about what we would do differently in the final draft)
+Our simulation based hypothesis testing method may not have been the best choice given that we do not know whether the songs are independent or not, as some could have come from the same album or artist. We chose to separate the time periods into “Oldies” and “Present” based on the fact that the Internet became widely used by the public in the 1990s but even so, our choice to represent these two time periods is somewhat arbitrary. The data also began in 1956 so for our decades variable, the 50s had much fewer data points than the other decades. This means that the proportion of non english songs for the 50s may have impacted the Oldies time period more and skewed our data or conclusions. There could be more information within specific decades or years that we missed by doing the larger time period. Our analysis could be improved by creating linear regression models 
+
+Our linear regression method was not the best choice since there wasn’t a very strong correlation and our graph shows a lot of variation from our line of best fit. Furthermore, the interaction effect was very small between the pop genre and acousticness so our second model which included the interaction effect had barely any difference from the original model.
+If we could redo our project, we would find a dataset where there is popular music in the United States so we could better examine how one country responds to cultural shifts in music instead of worldwide. 
