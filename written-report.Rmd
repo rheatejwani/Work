@@ -17,13 +17,13 @@ Music is one of the most accessible ways to experience and communicate emotional
 
 Trends in popular music are constantly changing, and these changes will affect globalization and cultural communication. For instance, hip-hop music, an aspect of the hip-hop cultural movement, was stated to be the most popular genre of music in the U.S. in 2017 in this Rolling Stone article: https://www.rollingstone.com/music/music-news/hip-hop-continued-to-dominate-the-music-business-in-2018-774422/. As students who frequently listen to music, we want to analyze the trends of popular music in our generation and the generations before us. 
 
-The data that we chose to analyze was curated by Sumat Singh (@iamsumat) on Kaggle, and contains variables that measure various characteristics of the most popular music in the world over the years 1956 to 2019 on the streaming service Spotify. https://www.kaggle.com/iamsumat/spotify-top-2000s-mega-dataset 
+The data that we chose to analyze was curated by Sumat Singh (@iamsumat) on Kaggle, and contains variables that measure various characteristics of the most popular music in the world over the years 1956 to 2019 on the streaming service Spotify.
 
 The original data set was taken from the playlist on Spotify "Top 2000s" by the user PlaylistMachinery (@plamere) using Selenium with Python. It was scraped from http://sortyourmusic.playlistmachinery.com/. This data was uploaded 9 months ago.
 
-This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of the top 2000 most popular songs from 1956 to 2019 from Spotify. 
+This data set has 15 columns and 1994 rows. The observations in the data set describe the characteristics of 1,994 of the most popular songs from 1956 to 2019 from Spotify. 
 
-The variables we will be focusing on are `Acousticness`, which is a measure from 0 to 100 representing the confidence measure that the song is acoustic (with 100 being high confidence and 0 being no/low confidence), `year`, which is the year the song was created, and `genre`, which is the genre of the music. We chose `Acousticness` because we thought that trends observed in `Acousticness` would reflect the development of technology used in music production in the modern era. Additionally, we focused on genres outside of English-speaking countries because an increase in technology, such as the popularization of the Internet in the 1990s, may also increase cross cultural communication including music. https://webfoundation.org/about/vision/history-of-the-web/
+The variables we will be focusing on are `Acousticness`, which is a measure from 0 to 100 representing the confidence measure that the song is acoustic (with 100 being high confidence and 0 being no/low confidence), `year`, which is the year the song was created, and `genre`, which is the genre of the music. We chose `Acousticness` because we thought that trends observed in `Acousticness` would reflect the development of technology used in music production in the modern era. Additionally, we focused on genres outside of English-speaking countries because an increase in technology, such as the popularization of the Internet in the 1990s, may also increase cross cultural communication including music. 
 
 We explored patterns and mutated our chosen variables in the methodology section of this report to better explore the change of the standard deviation of Acousticness and the prevalence of non-English languages in popular music over time. 
 
@@ -116,6 +116,13 @@ spotify_data <- spotify_data %>%
 
 Older music tends to have a higher median value for `Acousticness`. The median acousticness has remained relatively constant from the 1990s to the 2010s and the majority of the interquartile range overlaps and is around the same size, which indicates they have similar spreads for `Acousticness`. There aren't any outliers in our data set.
 
+```{r pop-year}
+spotify_data %>%
+  group_by(decade) %>%
+  count(pop) %>%
+  filter(pop == "pop")
+```
+Using the dplyr count function, we can see that the number of pop genre songs have generally increased over decades. We will further explore later whether these songs classified as the pop genre have an impact on the standard deviation of acousticness over time. 
 
 ```{r visualized-foreign-lang-proportion}
 ggplot(data = spotify_data, mapping = aes(x = decade, fill = foreign_lang)) +
@@ -179,6 +186,9 @@ visualize(null_dist)+
 ```
 ### Linear model for standard deviation of acousticness
 
+The null hypothesis is that the coefficient is equal to zero and the year has no effect on the standard deviation of Acousticness.
+The alternative hypothesis is that the coefficient is not equal to zero and the year has an effect on the standard deviation of Acousticness. 
+
 ```{r linear-model}
 acousticness_model <- lm(sd ~ year, data=spotify_data)
   tidy(acousticness_model)
@@ -191,6 +201,9 @@ The intercept of this graph tells us that when the year is 1956, we expect the s
 
 The slope tells us that for each additional year, the standard deviation of Acousticness is expected to increase, on average, by 0.06.
 
+Our significance level is 0.05 and since the p-value is less than 0.05, we reject the null hypothesis and say there is sufficient evidence that the coefficient is not equal to zero and the year has an effect on the standard deviation of Acousticness. 
+
+
 ```{r model-visualization-1}
 ggplot(data = acousticness_model, mapping = aes(x = year, y = sd)) +
   geom_point() +
@@ -200,6 +213,9 @@ ggplot(data = acousticness_model, mapping = aes(x = year, y = sd)) +
 This linear model suggests a slight positive linear relationship of the standard deviation of acousticness of popular songs and the year the popular songs were created. 
 
 Next, we chose to do a multiple linear regression model with interaction effects to allow for different slopes and explore whether the relationship between the explanatory variable of year and standard deviation of acousticness depends on the relationship between the explanatory variable of the pop genre and the standard deviation of acousticness. 
+
+The null hypothesis is that the coefficients are equal to zero and the year and pop genre have no effect on the standard deviation of Acousticness.
+The alternative hypothesis is that the coefficients are not equal to zero and the year and pop genre have an effect on the standard deviation of Acousticness. 
 
 ```{r lm-pop-time}
 acousticness_year_pop <- lm(sd ~ year + pop + year*pop, data=spotify_data)
@@ -212,14 +228,19 @@ The intercept of this graph tells us that when the year is 1956, we expect the s
 
 All else held constant, for every additional year since 1956, the standard deviation of acousticness for pop songs is predicted to increase, on average, by 0.056. 
 
-Linear Model for pop songs: $\widehat{sdAcousticness}= 25.858 + 0.056 \times year$
+Linear Model for pop songs: $\widehat{sdAcousticness}= 25.745 + 0.056 \times year$
 
-All else held constant, in 1956, pop songs are predicted, on average, to have a standard deviation of acousticness that is 0.113 less than non-pop songs. 
+All else held constant, for every additional year since 1956, the standard deviation of acousticness for pop songs is predicted to increase, on average, by 0.056. 
 
-Linear Model for songs in 1956: $\widehat{sdAcousticness}= 25.858- 0.113 \times pop$
+Linear Model for nonpop songs: $\widehat{sdAcousticness}= 25.858 + 0.059 \times year$
 
-Rate of change in the standard deviation of acousticness as year increases depends on the genre since they have different slopes. 
-They have the same intercept so we cannot say one model or the other has a consistently different standard deviation of acousticness. 
+Our models predict:
+
+Rate of change in the standard deviation of acousticness as year increases depends on the genre since they have different slopes.
+
+Nonpop songs consistently have a larger standard deviation of acousticness than pop songs since it has a higher intercept. 
+
+Our significance level is 0.05 and since the p-value is less than 0.05, we reject the null hypothesis and say there is sufficient evidence that the coefficients are not equal to zero and the year and pop genre have an effect on the standard deviation of Acousticness. 
 
 ```{r model-visualization-2}
 ggplot(data=acousticness_year_pop, mapping=aes(x = year, y = sd, color = as.factor(pop))) +
@@ -244,14 +265,31 @@ Because the adjusted $R^2$ value is larger for the non-interactive linear model 
 
 ## Discussion
 
-We have learned using our simulation-based hypothesis test that there is significant evidence that the proportion of non english songs in popular music has increased from the “Oldies” time period of before 1990 to the “Present” time period of after 1989. We have learned that there is not enough evidence to show using linear regression with and without interaction effects that the standard deviation of Acousticness increased over time.
+### Summary of Statistical Analysis
 
-The data in general appeared to be pretty reliable but given it was taken from Spotify, it may have eliminated some pieces of data coming in from other methods of listening to music like Apple Music. The validity of our categorical variables like Top Genre and pop are questionable because these are subjective factors and the labeling of one song as “alternative pop rock” or “pop rock” is subjective to the listener. There are limitations to the analysis we can do with this data set, since there may be many other factors that are not variables which we cannot include in our modeling which impact the diversity of popular music. In addition, we have a limited number of samples of popular music. 
+Our research question asked whether the data provides sufficient evidence that the proportion of songs in non-English languages has increased from the time period of 1956-1989 to the time period of 1990 to present and whether the data provides sufficient evidence that the standard deviation in `Acousticness` has increased over time. Overall, we wanted to observe how popular music has shifted to be more diverse in the characteristics of non-English genres or `Acousticness` over time. 
 
-Our simulation based hypothesis testing method may not have been the best choice given that we do not know whether the songs are independent or not, as some could have come from the same album or artist. We chose to separate the time periods into “Oldies” and “Present” based on the fact that the Internet became widely used by the public in the 1990s but even so, our choice to represent these two time periods is somewhat arbitrary. The data also began in 1956 so for our decades variable, the 50s had much fewer data points than the other decades. This means that the proportion of non english songs for the 50s may have impacted the Oldies time period more and skewed our data or conclusions. There could be more information within specific decades or years that we missed by doing the larger time period. Our analysis could be improved by creating linear regression models 
+To answer our research question, we created visualizations to show some general trends in acousticness, pop, and foreign languages over time that we wanted to analyze further using hypothesis tests and regression. Using our simulation-based hypothesis test, we found that there is significant evidence that the proportion of non english songs in popular music has increased from the “Oldies” time period of before 1990 to the “Present” time period of after 1989. We have learned that there is enough evidence to show using linear regression with and without interaction effects that the standard deviation of Acousticness increased over time because our p-value for both regression models was less than our significance level so we rejected the null hypothesis in both cases. 
 
-Our linear regression method was not the best choice since there wasn’t a very strong correlation and our graph shows a lot of variation from our line of best fit.
+### Reliability of the Data
+
+Kaggle, the website where we took our data from, is reputable within the statistics community but given that the data was scraped from Spotify, the top 1,994 songs only take into account Spotify listeners and not radio listeners, youtube users, or other types of music app users.
+The validity of our categorical variables like Top Genre and pop are questionable because these are subjective factors and the labeling of one song as “alternative pop rock” or “pop rock” is subjective to the listener. There are limitations to the analysis we can do with this data set, since there may be many other factors that are not variables which we cannot include in our modeling which impact the diversity of popular music. For instance, if an artist is already popular or well-known, multiple songs may become popular in the same year in which they released. an album. In addition, we have a limited number of samples of popular songs.
+
+### Critiques and Next Steps
+
+We chose to create the variable for time period("Oldies" and "Present") based on the fact that the Internet became widely used by the public in the 1990s but our choice to represent these two time periods the way we did is somewhat arbitrary and could be misleading. The data also began in 1956 so for our decades variable, the 50s had fewer data points than the other decades. This means that the proportion of non English songs for the 50s may have impacted the "Oldies" time period more and skewed our data and conclusions from the simulation-based hypothesis test. There also could be more information or patterns within specific decades or years that we missed by using the larger time period so in the future, we would do more hypothesis tests comparing individual years or decades. 
+
+There wasn't a very strong correlation for our linear regression models and our graph shows a large number of residuals from our line of best fit. Furthermore, the interaction effect was very small between the pop genre and acousticness so our second model which included the interaction effect overlapped the original model. If we were to redo our regression models, we would choose different variables and explore the possibility of nonlinear models such as logistic models. 
+
+If we were to start over, we would use a dataset where there is popular music in the United States so we could better examine how one country responds to cultural shifts in music instead of worldwide. It can also be seen as a form of extrapolation if we use our conclusions from the dataset to talk about years outside the dataset, so if we were to redo our project, we find a dataset with popular songs from more years. 
+
+However, we believe our statistical analysis and testing is a good starting point for future analysis onto music data and was able to show us interesting patterns and trends in popular music. 
+
+##Works Cited
+https://www.rollingstone.com/music/music-news/hip-hop-continued-to-dominate-the-music-business-in-2018-774422/
+https://www.kaggle.com/iamsumat/spotify-top-2000s-mega-dataset 
+https://webfoundation.org/about/vision/history-of-the-web/
 
 
-Furthermore, the interaction effect was very small between the pop genre and acousticness so our second model which included the interaction effect had barely any difference from the original model.
-If we could redo our project, we would find a dataset where there is popular music in the United States so we could better examine how one country responds to cultural shifts in music instead of worldwide. It can also be seen as a form of extrapolation if we use our conclusions from the dataset to talk about years outside the dataset, so if we were to redo our project, we find a dataset with more years included.
+
