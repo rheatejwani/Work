@@ -187,8 +187,9 @@ We will be using the variable `sd`, which is the standard deviation of the `Acou
 
 The linear equation for the model is $\widehat{sd of Acousticness}= 25.842 + 0.0596 \times year$
 
-The intercept of this graph is when the year is 1956, we expect the standard deviation for acousticness to be 25.842, holding all else constant. For each additional year, we expect the standard deviation of acousticness to increase by 0.0596, holding all else constant.
+The intercept of this graph tells us that when the year is 1956, we expect the standard deviation for acousticness to be 25.842, holding all else constant.
 
+The slope tells us that for each additional year, the standard deviation of Acousticness is expected to increase, on average, by 0.06.
 
 ```{r model-visualization-1}
 ggplot(data = acousticness_model, mapping = aes(x = year, y = sd)) +
@@ -196,17 +197,29 @@ ggplot(data = acousticness_model, mapping = aes(x = year, y = sd)) +
   geom_smooth(method = "lm", se=FALSE) +
   labs(title="Standard Deviation vs. Year", x="Year since 1956", y="Standard Deviation (of Acousticness)")
 ```
+This linear model suggests a slight positive linear relationship of the standard deviation of acousticness of popular songs and the year the popular songs were created. 
 
-This linear model shows that the standard deviation in the acousticness of popular songs has a positive linear relationship with `year`.
+Next, we chose to do a multiple linear regression model with interaction effects to allow for different slopes and explore whether the relationship between the explanatory variable of year and standard deviation of acousticness depends on the relationship between the explanatory variable of the pop genre and the standard deviation of acousticness. 
 
 ```{r lm-pop-time}
 acousticness_year_pop <- lm(sd ~ year + pop + year*pop, data=spotify_data)
   tidy(acousticness_year_pop)
 ```
 
-$\widehat{sdAcousticness}= 25.858 + 0.059 \times year - 0.113 \times foreign_lang_factor - 0.003 \times year:foreign_lang_factor$
+$\widehat{sdAcousticness}= 25.858 + 0.059 \times year - 0.113 \times pop - 0.003 \times year:pop$
 
-The intercept of this graph is when the year is 1956, we expect the standard deviation for acousticness to be 25.858, holding all else constant. For each additional year, we expect the standard deviation of acousticness to increase by 0.059, holding pop constant. We expect pop songs to have a standard deviation of acousticness that is 0.113 less than songs that are not pop, on average, holding year constant. **EXPLAIN INTERACTION**
+The intercept of this graph tells us that when the year is 1956, we expect the standard deviation for acousticness to be 25.858. 
+
+All else held constant, for every additional year since 1956, the standard deviation of acousticness for pop songs is predicted to increase, on average, by 0.056. 
+
+Linear Model for pop songs: $\widehat{sdAcousticness}= 25.858 + 0.056 \times year$
+
+All else held constant, in 1956, pop songs are predicted, on average, to have a standard deviation of acousticness that is 0.113 less than non-pop songs. 
+
+Linear Model for songs in 1956: $\widehat{sdAcousticness}= 25.858- 0.113 \times pop$
+
+Rate of change in the standard deviation of acousticness as year increases depends on the genre since they have different slopes. 
+They have the same intercept so we cannot say one model or the other has a consistently different standard deviation of acousticness. 
 
 ```{r model-visualization-2}
 ggplot(data=acousticness_year_pop, mapping=aes(x = year, y = sd, color = as.factor(pop))) +
@@ -227,7 +240,6 @@ glance(acousticness_model) %>%
 glance(acousticness_year_pop) %>%
   select(r.squared, adj.r.squared)
 ```
-
 Because the adjusted $R^2$ value is larger for the non-interactive linear model compared to the interactive linear model, the non-interactive linear model is a better fit for our data. 
 
 ## Discussion
@@ -238,5 +250,8 @@ The data in general appeared to be pretty reliable but given it was taken from S
 
 Our simulation based hypothesis testing method may not have been the best choice given that we do not know whether the songs are independent or not, as some could have come from the same album or artist. We chose to separate the time periods into “Oldies” and “Present” based on the fact that the Internet became widely used by the public in the 1990s but even so, our choice to represent these two time periods is somewhat arbitrary. The data also began in 1956 so for our decades variable, the 50s had much fewer data points than the other decades. This means that the proportion of non english songs for the 50s may have impacted the Oldies time period more and skewed our data or conclusions. There could be more information within specific decades or years that we missed by doing the larger time period. Our analysis could be improved by creating linear regression models 
 
-Our linear regression method was not the best choice since there wasn’t a very strong correlation and our graph shows a lot of variation from our line of best fit. Furthermore, the interaction effect was very small between the pop genre and acousticness so our second model which included the interaction effect had barely any difference from the original model.
-If we could redo our project, we would find a dataset where there is popular music in the United States so we could better examine how one country responds to cultural shifts in music instead of worldwide. 
+Our linear regression method was not the best choice since there wasn’t a very strong correlation and our graph shows a lot of variation from our line of best fit.
+
+
+Furthermore, the interaction effect was very small between the pop genre and acousticness so our second model which included the interaction effect had barely any difference from the original model.
+If we could redo our project, we would find a dataset where there is popular music in the United States so we could better examine how one country responds to cultural shifts in music instead of worldwide. It can also be seen as a form of extrapolation if we use our conclusions from the dataset to talk about years outside the dataset, so if we were to redo our project, we find a dataset with more years included.
