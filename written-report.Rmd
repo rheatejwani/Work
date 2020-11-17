@@ -67,12 +67,13 @@ spotify_data <- spotify_data %>%
 ```{r foreign_languages_variable}
 spotify_data <- spotify_data %>%
   mutate(foreign_lang = 
-    `Top Genre` == "dutch indie" | `Top Genre` == "dutch cabaret" 
-    | `Top Genre` == "dutch pop" |`Top Genre` == "dutch americana" |
-      `Top Genre` == "german pop"|`Top Genre` == "dutch rock" |
-      `Top Genre` == "belgian rock" | `Top Genre` == "finnish metal"|
-      `Top Genre` == "german pop rock" | `Top Genre` == "german alternative rock" |`Top Genre` == "italian pop" | `Top Genre` == "latin" |
-      `Top Genre` == "latin alternative"| `Top Genre` == "latin jazz"
+    `Top Genre` == "dutch indie" | `Top Genre` == "dutch cabaret" | 
+    `Top Genre` == "dutch pop" |`Top Genre` == "dutch americana" |
+    `Top Genre` == "german pop"|`Top Genre` == "dutch rock" |
+    `Top Genre` == "belgian rock" | `Top Genre` == "finnish metal"|
+    `Top Genre` == "german pop rock" | `Top Genre` == "german alternative rock" |
+    `Top Genre` == "italian pop" | `Top Genre` == "latin" |
+    `Top Genre` == "latin alternative"| `Top Genre` == "latin jazz"
   )
 
 ```
@@ -109,9 +110,9 @@ spotify_data <- spotify_data %>%
 ```
 
 ```{r acousticness-boxplot}
-  ggplot(data = spotify_data, mapping = aes(x = decade, y = Acousticness, fill = decade)) +
-         geom_boxplot() +
-  labs(title = "Acousticness vs. Decade")
+ggplot(data = spotify_data, mapping = aes(x = decade, y = Acousticness, fill = decade)) +
+    geom_boxplot() +
+    labs(title = "Acousticness vs. Decade")
 ```
 
 Older music tends to have a higher median value for `Acousticness`. The median acousticness has remained relatively constant from the 1990s to the 2010s and the majority of the interquartile range overlaps and is around the same size, which indicates they have similar spreads for `Acousticness`. There aren't any outliers in our data set.
@@ -164,15 +165,15 @@ Alpha: 0.05 ($\alpha = 0.05$)
 set.seed(1234)
 null_dist <- spotify_data %>%
   specify(foreign_lang~period, success = "TRUE") %>%
-  hypothesize(null="independence") %>%
-  generate(reps=1000, type = "permute") %>%
-  calculate(stat="diff in props", order = c("90s and After", "Pre 90s"))
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in props", order = c("90s and After", "Pre 90s"))
 ```
 
 ```{r p-value}
 obs_diff <- spotify_data %>%
-  specify(foreign_lang~period, success="TRUE") %>%
-  calculate(stat="diff in props", order= c("90s and After", "Pre 90s"))%>%
+  specify(foreign_lang~period, success = "TRUE") %>%
+  calculate(stat = "diff in props", order = c("90s and After", "Pre 90s"))%>%
   pull()
 
 null_dist %>%
@@ -194,7 +195,7 @@ The null hypothesis is that the coefficient is equal to zero and the year has no
 The alternative hypothesis is that the coefficient is not equal to zero and the year has an effect on the standard deviation of `Acousticness`. 
 
 ```{r linear-model}
-acousticness_model <- lm(sd ~ yearSince1956, data=spotify_data)
+acousticness_model <- lm(sd ~ yearSince1956, data = spotify_data)
   tidy(acousticness_model)
 ```
 We will be using the variable `sd`, which is the standard deviation of the `Acousticness` of the songs per year.
@@ -212,7 +213,7 @@ Our significance level is 0.05 and since the p-value is less than 0.05, we rejec
 ggplot(data = acousticness_model, mapping = aes(x = yearSince1956, y = sd)) +
   geom_point() +
   geom_smooth(method = "lm", se=FALSE) +
-  labs(title="Standard Deviation vs. Year", x="Year since 1956", y="Standard Deviation (of Acousticness)")
+  labs(title = "Standard Deviation vs. Year", x = "Year since 1956", y = "Standard Deviation (of Acousticness)")
 ```
 This linear model suggests a slight positive linear relationship of the standard deviation of `Acousticness` of popular songs and the year the popular songs were created. 
 
@@ -246,11 +247,11 @@ All else held constant, for every additional year since 1956, the standard devia
 Our significance level is 0.05 and since the p-value is less than 0.05, we reject the null hypothesis and say there is sufficient evidence that the coefficients are not equal to zero and the year and pop genre have an effect on the standard deviation of `Acousticness`. 
 
 ```{r model-visualization-2}
-ggplot(data=acousticness_year_pop, mapping=aes(x = yearSince1956, y = sd)) +
+ggplot(data = acousticness_year_pop, mapping = aes(x = yearSince1956, y = sd)) +
   geom_point() +
   geom_abline(slope = 0.05913789, intercept = 25.85778059, color = "red")+
-  geom_abline(slope = (0.05913789	+ 0.00277569), intercept = (25.85778059	-0.11327760), color="dark cyan")+
-  labs(title="Standard Deviation vs. Year", x="Year Since 1956", y="Standard Deviation (of Acousticness)")
+  geom_abline(slope = (0.05913789	+ 0.00277569), intercept = (25.85778059	- 0.11327760), color   = "dark cyan") +
+  labs(title = "Standard Deviation vs. Year", x = "Year Since 1956", y = "Standard Deviation (of Acousticness)")
 ```
 
 R-squared values for the models:
